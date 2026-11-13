@@ -101,7 +101,7 @@ if current_page == "🏠 Home":
             <div class="metric-card">
                 <div class="metric-title">Indexed Chunks</div>
                 <div class="metric-value">{stats.get("total_chunks", 0)}</div>
-                <div class="metric-subtitle">Stored dense vectors</div>
+                <div class="metric-subtitle">Stored 384-dim dense vectors</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -131,6 +131,28 @@ if current_page == "🏠 Home":
             """,
             unsafe_allow_html=True,
         )
+
+    # Interactive 1-Click Demonstration Box
+    if stats.get("total_documents", 0) == 0:
+        st.markdown(
+            """
+            <div style="background: rgba(56, 189, 248, 0.08); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 12px; padding: 1.25rem; margin: 1rem 0;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #38bdf8;">✨ First Time Here? Load Sample Documents with 1 Click</h4>
+                <p style="margin: 0 0 0.75rem 0; font-size: 0.88rem; color: #cbd5e1;">
+                    Instantly load two bundled sample research papers (<b>Deep Learning Architectures</b> and <b>Quantum Computing Principles</b>) into ChromaDB to test semantic search and citations right away.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("🚀 Load Sample Documents into ChromaDB", type="primary"):
+            sample1 = settings.base_dir / "data" / "sample_docs" / "Deep_Learning_Architectures.pdf"
+            sample2 = settings.base_dir / "data" / "sample_docs" / "Quantum_Computing_Principles.pdf"
+            if sample1.exists() and sample2.exists():
+                with st.spinner("Indexing sample documents..."):
+                    pipeline.ingest_documents([sample1, sample2])
+                st.toast("Sample documents successfully indexed!", icon="✅")
+                st.rerun()
 
     st.markdown("### 🚀 Quick Start Guide")
     q1, q2, q3 = st.columns(3)
@@ -174,7 +196,7 @@ elif current_page == "📁 My Documents":
         """
         <div class="hero-header">
             <h1 class="hero-title">Document Management</h1>
-            <p class="hero-subtitle">Upload, process, inspect, and manage multi-page PDF documents.</p>
+            <p class="hero-subtitle">Upload, inspect, search, and manage multi-page PDF documents stored in ChromaDB.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -230,7 +252,7 @@ elif current_page == "📁 My Documents":
 
     st.markdown("---")
 
-    # Indexed Documents List & Deletion
+    # Indexed Documents List & Management
     st.subheader("📚 Currently Indexed Documents")
     stats = pipeline.get_document_statistics()
     docs = stats.get("documents", [])
@@ -238,22 +260,31 @@ elif current_page == "📁 My Documents":
     if not docs:
         st.info("No documents are currently indexed in ChromaDB.")
     else:
-        st.write(f"Total: **{len(docs)}** document(s) with **{stats.get('total_chunks', 0)}** total chunks.")
+        # Search / Filter Bar for Documents
+        doc_search = st.text_input("🔍 Search indexed documents by name:", placeholder="Filter by document name...")
+        filtered_docs = [d for d in docs if doc_search.lower() in d["source"].lower()] if doc_search else docs
 
-        for d in docs:
-            c_doc, c_stats, c_action = st.columns([4, 3, 2])
+        st.caption(f"Showing **{len(filtered_docs)}** of **{len(docs)}** total document(s).")
+
+        for d in filtered_docs:
+            c_doc, c_stats, c_action = st.columns([5, 3, 2])
             with c_doc:
                 st.markdown(f"**📄 {d['source']}**")
                 st.caption(f"Document ID: `{d['document_id']}`")
             with c_stats:
-                st.write(f"**{d['chunk_count']}** chunks | **{d['total_pages']}** page(s)")
+                st.markdown(
+                    f"<span style='color: #38bdf8; font-weight: 600;'>{d['chunk_count']}</span> chunks &bull; "
+                    f"<span>{d['total_pages']}</span> page(s)",
+                    unsafe_allow_html=True,
+                )
             with c_action:
                 del_key = f"del_{d['document_id']}"
                 if st.button("🗑️ Delete", key=del_key, type="secondary"):
                     deleted = pipeline.delete_document(d["document_id"])
                     st.toast(f"Deleted {d['source']} ({deleted} chunks removed).")
                     st.rerun()
-            st.markdown("<hr style='margin: 0.5rem 0; opacity: 0.2;'>", unsafe_allow_html=True)
+
+            st.markdown("<hr style='margin: 0.5rem 0; opacity: 0.15;'>", unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -282,8 +313,8 @@ elif current_page == "⚙️ Settings":
     st.markdown(
         """
         <div class="hero-header">
-            <h1 class="hero-title">System Settings & Configuration</h1>
-            <p class="hero-subtitle">Inspect backend runtime configurations and hardware parameters.</p>
+            <h1 class="hero-title">System Settings & Diagnostic Telemetry</h1>
+            <p class="hero-subtitle">Inspect backend runtime configurations, hyperparameters, and vector store integrity.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -292,12 +323,12 @@ elif current_page == "⚙️ Settings":
     s1, s2 = st.columns(2)
 
     with s1:
-        st.subheader("🤖 LLM Configuration")
+        st.subheader("🤖 Local LLM (Ollama)")
         st.text_input("Ollama Base URL", value=settings.ollama_base_url, disabled=True)
-        st.text_input("Ollama Model Name", value=settings.ollama_model, disabled=True)
+        st.text_input("Configured Model", value=settings.ollama_model, disabled=True)
         st.number_input("Max Output Tokens", value=settings.ollama_max_tokens, disabled=True)
         st.number_input("Temperature", value=settings.ollama_temperature, disabled=True)
-        st.caption("Edit `.env` file to customize Ollama endpoints and model parameters.")
+        st.caption("Settings loaded dynamically from `.env`.")
 
     with s2:
         st.subheader("🧩 Embedding & Vector Store")
@@ -305,11 +336,12 @@ elif current_page == "⚙️ Settings":
         st.text_input("Vector Database Backend", value=settings.vector_store_backend.upper(), disabled=True)
         st.number_input("Chunk Size (Characters)", value=settings.chunk_size, disabled=True)
         st.number_input("Chunk Overlap (Characters)", value=settings.chunk_overlap, disabled=True)
-        st.text_input("ChromaDB Directory", value=str(settings.chroma_persist_dir), disabled=True)
+        st.text_input("ChromaDB Storage Directory", value=str(settings.chroma_persist_dir), disabled=True)
 
     st.markdown("---")
-    st.subheader("🩺 Diagnostic Connection Test")
-    if st.button("Run Health Probe", type="primary"):
-        h = pipeline.check_system_health()
+    st.subheader("🩺 Interactive System Diagnostic Probe")
+    if st.button("Run Diagnostic Health Probe", type="primary"):
+        with st.spinner("Probing system daemons and databases..."):
+            h = pipeline.check_system_health()
+        st.success("Diagnostic completed!")
         st.json(h)
-

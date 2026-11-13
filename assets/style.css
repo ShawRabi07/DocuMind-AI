@@ -1,169 +1,332 @@
 /* ==========================================================================
-   DocuMind AI – Modern SaaS Theme Stylesheet
+   DocuMind AI – Premium SaaS Dark Theme Stylesheet
    ========================================================================== */
+
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.01em;
+}
+
+code, pre {
+    font-family: 'JetBrains Mono', monospace !important;
+}
 
 /* Main Container & Layout */
 .main .block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-    max-width: 1200px;
+    padding-top: 1.75rem;
+    padding-bottom: 3.5rem;
+    max-width: 1240px;
+}
+
+/* Sleek Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Hero Header Banner */
+.hero-header {
+    position: relative;
+    background: radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                linear-gradient(135deg, #0f172a 0%, #111827 100%);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 16px;
+    padding: 2rem 2.25rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.hero-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.5), transparent);
+}
+
+.hero-title {
+    font-size: 2.15rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.025em;
+}
+
+.hero-subtitle {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    margin: 0;
+    max-width: 760px;
+    line-height: 1.5;
 }
 
 /* Metric Cards */
 .metric-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 12px;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.75) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .metric-card:hover {
     border-color: rgba(56, 189, 248, 0.4);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -6px rgba(56, 189, 248, 0.12);
 }
 
 .metric-title {
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.78rem;
+    font-weight: 600;
     color: #94a3b8;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.35rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
 }
 
 .metric-value {
-    font-size: 1.85rem;
-    font-weight: 700;
+    font-size: 1.95rem;
+    font-weight: 800;
     color: #f8fafc;
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
 }
 
 .metric-subtitle {
     font-size: 0.8rem;
     color: #64748b;
-    margin-top: 0.35rem;
+    margin-top: 0.4rem;
 }
 
-/* Status Badges */
+/* Status Badges with Pulse Effects */
 .badge-online {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    background-color: rgba(34, 197, 94, 0.15);
+    gap: 0.45rem;
+    background: rgba(34, 197, 94, 0.12);
     color: #4ade80;
     border: 1px solid rgba(34, 197, 94, 0.3);
-    padding: 0.25rem 0.65rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 600;
+}
+
+.badge-online::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
 }
 
 .badge-offline {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    background-color: rgba(239, 68, 68, 0.15);
+    gap: 0.45rem;
+    background: rgba(239, 68, 68, 0.12);
     color: #f87171;
     border: 1px solid rgba(239, 68, 68, 0.3);
-    padding: 0.25rem 0.65rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 600;
+}
+
+.badge-offline::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #ef4444;
 }
 
 .badge-mock {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    background-color: rgba(234, 179, 8, 0.15);
+    gap: 0.45rem;
+    background: rgba(234, 179, 8, 0.12);
     color: #facc15;
     border: 1px solid rgba(234, 179, 8, 0.3);
-    padding: 0.25rem 0.65rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 600;
 }
 
-/* Citation Box */
+.badge-mock::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #eab308;
+    box-shadow: 0 0 8px #eab308;
+}
+
+/* Modern Citation Card */
 .citation-card {
-    background-color: rgba(15, 23, 42, 0.6);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.6) 100%);
     border-left: 3px solid #38bdf8;
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.88rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    border-right: 1px solid rgba(148, 163, 184, 0.1);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    padding: 0.85rem 1.15rem;
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+    transition: all 0.2s ease;
+}
+
+.citation-card:hover {
+    border-left-color: #818cf8;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.75) 100%);
+    transform: translateX(3px);
 }
 
 .citation-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-weight: 600;
     color: #38bdf8;
-    margin-bottom: 0.25rem;
+    font-size: 0.88rem;
+    margin-bottom: 0.35rem;
 }
 
-.citation-score {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
+.citation-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.citation-score-bar-bg {
+    width: 60px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.4rem;
+}
+
+.citation-score-bar-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, #38bdf8, #4ade80);
 }
 
 .citation-excerpt {
     color: #cbd5e1;
-    font-size: 0.82rem;
-    line-height: 1.4;
-    font-style: italic;
+    font-size: 0.83rem;
+    line-height: 1.45;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.35rem;
+    border-left: 2px solid rgba(148, 163, 184, 0.3);
 }
 
-/* Latency Tag */
+/* Real Latency Tag */
 .latency-tag {
     display: inline-flex;
-    gap: 0.75rem;
+    align-items: center;
+    gap: 0.85rem;
     font-size: 0.78rem;
     color: #94a3b8;
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(15, 23, 42, 0.85);
     border: 1px solid rgba(148, 163, 184, 0.15);
-    padding: 0.3rem 0.75rem;
-    border-radius: 6px;
-    margin-top: 0.5rem;
-}
-
-/* Document Item Card */
-.doc-card {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(148, 163, 184, 0.12);
+    padding: 0.35rem 0.85rem;
     border-radius: 8px;
-    padding: 0.85rem 1rem;
-    margin-bottom: 0.6rem;
+    margin-top: 0.65rem;
 }
 
-/* Header Banner */
-.hero-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    border: 1px solid rgba(148, 163, 184, 0.15);
+.latency-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.latency-item b {
+    color: #f1f5f9;
+}
+
+/* Interactive Question Suggestion Chips */
+.suggestion-chip {
+    display: inline-block;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #e2e8f0;
+    padding: 0.45rem 0.95rem;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    margin: 0.25rem 0.35rem 0.25rem 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.suggestion-chip:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    transform: translateY(-1px);
+}
+
+/* Document List Card */
+.doc-box {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.7) 100%);
+    border: 1px solid rgba(148, 163, 184, 0.14);
     border-radius: 12px;
-    padding: 1.75rem 2rem;
-    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s ease;
 }
 
-.hero-title {
-    font-size: 2rem;
-    font-weight: 800;
-    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 0.35rem;
+.doc-box:hover {
+    border-color: rgba(56, 189, 248, 0.35);
 }
 
-.hero-subtitle {
-    font-size: 1rem;
-    color: #94a3b8;
-    margin: 0;
+/* Filter Tag */
+.filter-active-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
-

@@ -2,8 +2,8 @@
 DocuMind AI – Analytics Component
 ==================================
 Renders empirical system performance charts, document vector distributions,
-and latency telemetry using Plotly.
-Strict Operational Rule: Only plots real, empirically measured values. No simulated data.
+and latency telemetry using Plotly with interactive filters.
+Strict Operational Rule: Only plots real, empirically measured values.
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ def render_analytics(pipeline: RAGPipeline) -> None:
     st.markdown(
         """
         <div class="hero-header">
-            <h1 class="hero-title">System Analytics & Telemetry</h1>
-            <p class="hero-subtitle">Real-time empirical telemetry measuring vector indexing, retrieval latency, and model inference.</p>
+            <h1 class="hero-title">Telemetry & System Analytics</h1>
+            <p class="hero-subtitle">Real-time empirical metrics measuring vector indexing density, HNSW retrieval latency, and model inference.</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -39,33 +39,33 @@ def render_analytics(pipeline: RAGPipeline) -> None:
     total_queries = perf_summary.get("total_queries", 0)
 
     # Top KPI Metrics Row
-    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
-    with kpi_col1:
+    with kpi1:
         st.markdown(
             f"""
             <div class="metric-card">
-                <div class="metric-title">Total Documents</div>
+                <div class="metric-title">Indexed Documents</div>
                 <div class="metric-value">{total_docs}</div>
-                <div class="metric-subtitle">Active indexed PDFs</div>
+                <div class="metric-subtitle">Active verified PDFs</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    with kpi_col2:
+    with kpi2:
         st.markdown(
             f"""
             <div class="metric-card">
                 <div class="metric-title">Total Chunks</div>
                 <div class="metric-value">{total_chunks}</div>
-                <div class="metric-subtitle">Indexed vector embeddings</div>
+                <div class="metric-subtitle">Stored 384-dim vectors</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    with kpi_col3:
+    with kpi3:
         avg_ret_display = (
             f"{perf_summary['avg_retrieval_ms']:.1f} ms" if total_queries > 0 else "N/A"
         )
@@ -80,7 +80,7 @@ def render_analytics(pipeline: RAGPipeline) -> None:
             unsafe_allow_html=True,
         )
 
-    with kpi_col4:
+    with kpi4:
         avg_llm_display = (
             f"{perf_summary['avg_llm_ms']:.1f} ms" if total_queries > 0 else "N/A"
         )
@@ -89,7 +89,7 @@ def render_analytics(pipeline: RAGPipeline) -> None:
             <div class="metric-card">
                 <div class="metric-title">Avg LLM Latency</div>
                 <div class="metric-value">{avg_llm_display}</div>
-                <div class="metric-subtitle">Llama 3 generation</div>
+                <div class="metric-subtitle">Token generation time</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -108,6 +108,7 @@ def render_analytics(pipeline: RAGPipeline) -> None:
                     "Document": d["source"],
                     "Chunks": d["chunk_count"],
                     "Pages": d["total_pages"],
+                    "Avg Chunks/Page": round(d["chunk_count"] / max(1, d["total_pages"]), 2),
                 }
                 for d in doc_list
             ]
@@ -121,15 +122,16 @@ def render_analytics(pipeline: RAGPipeline) -> None:
                 x="Document",
                 y="Chunks",
                 color="Chunks",
-                color_continuous_scale="Blues",
+                color_continuous_scale=["#0284c7", "#38bdf8", "#818cf8"],
                 title="Vector Chunks Indexed per Document",
                 labels={"Chunks": "Number of Chunks", "Document": "PDF Filename"},
                 template="plotly_dark",
             )
             fig_chunks.update_layout(
-                plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                paper_bgcolor="rgba(15, 23, 42, 0.4)",
-                margin=dict(l=20, r=20, t=40, b=20),
+                plot_bgcolor="rgba(15, 23, 42, 0.5)",
+                paper_bgcolor="rgba(15, 23, 42, 0.5)",
+                margin=dict(l=20, r=20, t=45, b=20),
+                font=dict(family="Plus Jakarta Sans, sans-serif"),
             )
             st.plotly_chart(fig_chunks, use_container_width=True)
 
@@ -139,23 +141,25 @@ def render_analytics(pipeline: RAGPipeline) -> None:
                 names="Document",
                 values="Chunks",
                 title="Index Proportion by Document",
-                hole=0.45,
+                hole=0.5,
+                color_discrete_sequence=["#38bdf8", "#818cf8", "#34d399", "#f472b6"],
                 template="plotly_dark",
             )
             fig_pie.update_layout(
-                plot_bgcolor="rgba(15, 23, 42, 0.4)",
-                paper_bgcolor="rgba(15, 23, 42, 0.4)",
-                margin=dict(l=20, r=20, t=40, b=20),
+                plot_bgcolor="rgba(15, 23, 42, 0.5)",
+                paper_bgcolor="rgba(15, 23, 42, 0.5)",
+                margin=dict(l=20, r=20, t=45, b=20),
+                font=dict(family="Plus Jakarta Sans, sans-serif"),
             )
             st.plotly_chart(fig_pie, use_container_width=True)
 
     else:
-        st.info("No documents are currently indexed in ChromaDB. Upload PDFs to view vector distribution.")
+        st.info("ℹ️ No documents are currently indexed in ChromaDB. Upload PDFs in **My Documents** to view index distributions.")
 
     st.markdown("---")
 
     # Real Query Latency Section
-    st.subheader("⚡ Query Latency Telemetry")
+    st.subheader("⚡ End-to-End Query Latency Telemetry")
 
     if history:
         # Build DataFrame from real measured query metrics
@@ -163,71 +167,61 @@ def render_analytics(pipeline: RAGPipeline) -> None:
         for idx, m in enumerate(history, 1):
             data_records.append(
                 {
-                    "Query #": idx,
-                    "Query": m.query[:35] + ("..." if len(m.query) > 35 else ""),
-                    "Retrieval Latency (ms)": m.retrieval_latency_ms,
-                    "LLM Latency (ms)": m.llm_latency_ms,
+                    "Query #": f"#{idx}",
+                    "Query": m.query[:40] + ("..." if len(m.query) > 40 else ""),
+                    "Retrieval (ms)": m.retrieval_latency_ms,
+                    "LLM Generation (ms)": m.llm_latency_ms,
                     "Total Latency (ms)": m.total_latency_ms,
-                    "Chunks Retrieved": m.chunks_retrieved,
-                    "Mode": "Mock" if m.is_mock else "Live Ollama",
+                    "Chunks": m.chunks_retrieved,
+                    "Mode": "Mock LLM" if m.is_mock else "Live Ollama",
                 }
             )
 
         df_metrics = pd.DataFrame(data_records)
 
-        # Plot 1: Stacked Latency Breakdown
+        # Plot: Stacked Latency Breakdown
         fig_lat = go.Figure()
         fig_lat.add_trace(
             go.Bar(
                 x=df_metrics["Query #"],
-                y=df_metrics["Retrieval Latency (ms)"],
+                y=df_metrics["Retrieval (ms)"],
                 name="Vector Retrieval (ms)",
-                marker_color="#38bdf8",
+                marker=dict(color="#38bdf8", opacity=0.9),
             )
         )
         fig_lat.add_trace(
             go.Bar(
                 x=df_metrics["Query #"],
-                y=df_metrics["LLM Latency (ms)"],
-                name="LLM Generation (ms)",
-                marker_color="#818cf8",
+                y=df_metrics["LLM Generation (ms)"],
+                name="LLM Synthesis (ms)",
+                marker=dict(color="#818cf8", opacity=0.9),
             )
         )
 
         fig_lat.update_layout(
             barmode="stack",
-            title="End-to-End Latency Breakdown per Query",
-            xaxis_title="Query Execution Sequence",
+            title="Empirical Latency Breakdown per Executed Query",
+            xaxis_title="Query Sequence",
             yaxis_title="Time (Milliseconds)",
             template="plotly_dark",
-            plot_bgcolor="rgba(15, 23, 42, 0.4)",
-            paper_bgcolor="rgba(15, 23, 42, 0.4)",
+            plot_bgcolor="rgba(15, 23, 42, 0.5)",
+            paper_bgcolor="rgba(15, 23, 42, 0.5)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             margin=dict(l=20, r=20, t=60, b=20),
+            font=dict(family="Plus Jakarta Sans, sans-serif"),
         )
         st.plotly_chart(fig_lat, use_container_width=True)
 
-        # Table: Query Execution Logs
+        # Query Audit Log Table with clear button
         st.markdown("##### 📋 Measured Query Audit Log")
         st.dataframe(
-            df_metrics[
-                [
-                    "Query #",
-                    "Query",
-                    "Retrieval Latency (ms)",
-                    "LLM Latency (ms)",
-                    "Total Latency (ms)",
-                    "Chunks Retrieved",
-                    "Mode",
-                ]
-            ],
+            df_metrics,
             use_container_width=True,
             hide_index=True,
         )
 
     else:
         st.info(
-            "📊 **No query metrics recorded yet.** "
-            "Ask questions in the **AI Assistant** section to record empirical latency measurements."
+            "📊 **No query telemetry recorded yet.** "
+            "Ask questions in the **AI Assistant** section to record empirical vector retrieval and inference timings."
         )
-

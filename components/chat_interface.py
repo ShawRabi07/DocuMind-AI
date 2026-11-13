@@ -1,8 +1,8 @@
 """
 DocuMind AI – Conversational Chat Interface Component
 ======================================================
-Renders the ChatGPT-style document Q&A conversation, displays verifiable
-source citations, provides expandable retrieved context previews, and shows real latency.
+Renders the ChatGPT-style document Q&A conversation, interactive question chips,
+verifiable source citations with visual relevance meters, and real latency metrics.
 """
 
 from __future__ import annotations
@@ -32,40 +32,85 @@ def render_chat_interface(
     st.markdown(
         """
         <div class="hero-header">
-            <h1 class="hero-title">AI Document Assistant</h1>
-            <p class="hero-subtitle">Ask complex questions across your uploaded documents with precise page-level citations.</p>
+            <h1 class="hero-title">AI Research Assistant</h1>
+            <p class="hero-subtitle">Ask questions across your multi-page PDFs with transparent source grounding and page-by-page citations.</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+    # Active Scope & Filter Pill Banner
+    stats = pipeline.get_document_statistics()
+    doc_count = stats.get("total_documents", 0)
+    chunk_count = stats.get("total_chunks", 0)
+
+    scope_col1, scope_col2 = st.columns([3, 1])
+    with scope_col1:
+        if document_id:
+            # Find doc name
+            matched = [d["source"] for d in stats.get("documents", []) if d["document_id"] == document_id]
+            doc_name = matched[0] if matched else document_id
+            st.markdown(
+                f'<span class="filter-active-pill">🎯 Filter: <b>{doc_name}</b> (Top-{top_k} Chunks)</span>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f'<span class="filter-active-pill">🌐 Global Scope: <b>All {doc_count} Documents</b> ({chunk_count} Chunks, Top-{top_k})</span>',
+                unsafe_allow_html=True,
+            )
+    with scope_col2:
+        if st.button("🔄 Reset Chat", type="secondary", use_container_width=True):
+            st.session_state["messages"] = []
+            st.rerun()
+
     # Initialize chat history in session state
-    if "messages" not in st.session_state:
+    if "messages" not in st.session_state or not st.session_state["messages"]:
         st.session_state["messages"] = [
             {
                 "role": "assistant",
                 "content": (
-                    "Hello! I am DocuMind AI, your multi-document research assistant. "
-                    "Upload PDFs in the **My Documents** section, and ask me any question. "
-                    "I will answer strictly using facts verified in your documents with page citations."
+                    "👋 **Hello! I am DocuMind AI**, your document research assistant.\n\n"
+                    "Ask me anything about your uploaded documents. I will retrieve the most "
+                    "relevant excerpts and synthesize a factual answer with verifiable page citations."
                 ),
                 "citations": [],
                 "retrieved_chunks": [],
             }
         ]
 
-    # Quick prompt suggestion chips if chat is empty or fresh
-    stats = pipeline.get_document_statistics()
-    doc_count = stats.get("total_documents", 0)
+    # Interactive Question Suggestion Chips
+    if doc_count > 0 and len(st.session_state["messages"]) <= 1:
+        st.markdown("##### 💡 Suggested Questions (Click to Ask):")
+        chip_col1, chip_col2 = st.columns(2)
 
-    if doc_count == 0:
-        st.info(
-            "💡 **No documents indexed yet.** Go to **My Documents** in the sidebar to upload your PDFs.",
-            icon="📄",
-        )
+        prompt_candidates = [
+            "How does the Self-Attention mechanism compute attention weights?",
+            "What is Shor's algorithm and why does it threaten RSA?",
+            "Explain how Vision Transformers (ViT) process images.",
+            "What is quantum entanglement and how does it affect qubits?",
+        ]
+
+        clicked_prompt = None
+        with chip_col1:
+            if st.button(f"🔍 {prompt_candidates[0]}", use_container_width=True):
+                clicked_prompt = prompt_candidates[0]
+            if st.button(f"⚛️ {prompt_candidates[1]}", use_container_width=True):
+                clicked_prompt = prompt_candidates[1]
+        with chip_col2:
+            if st.button(f"🖼️ {prompt_candidates[2]}", use_container_width=True):
+                clicked_prompt = prompt_candidates[2]
+            if st.button(f"🌌 {prompt_candidates[3]}", use_container_width=True):
+                clicked_prompt = prompt_candidates[3]
+
+        if clicked_prompt:
+            st.session_state["pending_query"] = clicked_prompt
+            st.rerun()
+
+    st.markdown("---")
 
     # Display Conversation History
-    for msg in st.session_state["messages"]:
+    for idx, msg in enumerate(st.session_state["messages"]):
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
@@ -74,13 +119,21 @@ def render_chat_interface(
             if citations:
                 st.markdown("##### 📌 Verifiable Source Citations:")
                 for cit in citations:
-                    score_pct = f"{cit.similarity_score * 100:.1f}%"
+                    score_pct = cit.similarity_score * 100
+                    fill_pct = max(5, min(100, int(score_pct)))
                     st.markdown(
                         f"""
                         <div class="citation-card">
                             <div class="citation-header">
-                                <span>📄 {cit.source} — Page {cit.page_number} (Chunk #{cit.chunk_index})</span>
-                                <span class="citation-score">Relevance: {score_pct}</span>
+                                <span class="citation-pill">📄 {cit.source}</span>
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">
+                                        Page <b>{cit.page_number}</b> (Chunk #{cit.chunk_index}) &bull; Relevance: <b>{score_pct:.1f}%</b>
+                                    </span>
+                                    <span class="citation-score-bar-bg">
+                                        <div class="citation-score-bar-fill" style="width: {fill_pct}%;"></div>
+                                    </span>
+                                </div>
                             </div>
                             <div class="citation-excerpt">"{cit.excerpt}"</div>
                         </div>
@@ -92,14 +145,14 @@ def render_chat_interface(
             chunks = msg.get("retrieved_chunks", [])
             if chunks:
                 with st.expander(f"🔍 Inspect All {len(chunks)} Retrieved Document Chunks"):
-                    for idx, chk in enumerate(chunks, 1):
+                    for c_idx, chk in enumerate(chunks, 1):
                         st.markdown(
-                            f"**Chunk #{idx}** &mdash; `{chk.source}` (Page {chk.page_number}) | "
-                            f"Cosine Distance: `{chk.distance:.4f}`"
+                            f"**Chunk #{c_idx}** &mdash; `{chk.source}` (Page {chk.page_number}) | "
+                            f"Cosine Distance: `{chk.distance:.4f}` | Score: `{chk.similarity_score * 100:.1f}%`"
                         )
                         st.code(chk.text, language="text")
 
-            # Render Latency Tags
+            # Render Real Latency Tags
             total_lat = msg.get("total_latency_ms")
             if total_lat is not None and total_lat > 0:
                 ret_lat = msg.get("retrieval_latency_ms", 0.0)
@@ -108,16 +161,18 @@ def render_chat_interface(
                 st.markdown(
                     f"""
                     <div class="latency-tag">
-                        <span>⚡ Retrieval: <b>{ret_lat:.1f} ms</b></span>
-                        <span>🤖 Generation: <b>{llm_lat:.1f} ms</b>{mock_label}</span>
-                        <span>⏱️ Total: <b>{total_lat:.1f} ms</b></span>
+                        <span class="latency-item">⚡ Retrieval: <b>{ret_lat:.1f} ms</b></span>
+                        <span class="latency-item">🤖 Generation: <b>{llm_lat:.1f} ms</b>{mock_label}</span>
+                        <span class="latency-item">⏱️ Total: <b>{total_lat:.1f} ms</b></span>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
-    # Chat Input Box
+    # Check for Pending Query from Suggestion Chips
     user_query = st.chat_input("Ask a question about your uploaded documents...")
+    if not user_query and "pending_query" in st.session_state:
+        user_query = st.session_state.pop("pending_query")
 
     if user_query:
         # Display user message immediately
@@ -153,13 +208,21 @@ def render_chat_interface(
             if response.citations:
                 st.markdown("##### 📌 Verifiable Source Citations:")
                 for cit in response.citations:
-                    score_pct = f"{cit.similarity_score * 100:.1f}%"
+                    score_pct = cit.similarity_score * 100
+                    fill_pct = max(5, min(100, int(score_pct)))
                     st.markdown(
                         f"""
                         <div class="citation-card">
                             <div class="citation-header">
-                                <span>📄 {cit.source} — Page {cit.page_number} (Chunk #{cit.chunk_index})</span>
-                                <span class="citation-score">Relevance: {score_pct}</span>
+                                <span class="citation-pill">📄 {cit.source}</span>
+                                <div>
+                                    <span style="font-size: 0.8rem; color: #94a3b8; font-weight: 500;">
+                                        Page <b>{cit.page_number}</b> (Chunk #{cit.chunk_index}) &bull; Relevance: <b>{score_pct:.1f}%</b>
+                                    </span>
+                                    <span class="citation-score-bar-bg">
+                                        <div class="citation-score-bar-fill" style="width: {fill_pct}%;"></div>
+                                    </span>
+                                </div>
                             </div>
                             <div class="citation-excerpt">"{cit.excerpt}"</div>
                         </div>
@@ -172,10 +235,10 @@ def render_chat_interface(
                 with st.expander(
                     f"🔍 Inspect All {len(response.retrieved_chunks)} Retrieved Document Chunks"
                 ):
-                    for idx, chk in enumerate(response.retrieved_chunks, 1):
+                    for c_idx, chk in enumerate(response.retrieved_chunks, 1):
                         st.markdown(
-                            f"**Chunk #{idx}** &mdash; `{chk.source}` (Page {chk.page_number}) | "
-                            f"Cosine Distance: `{chk.distance:.4f}`"
+                            f"**Chunk #{c_idx}** &mdash; `{chk.source}` (Page {chk.page_number}) | "
+                            f"Cosine Distance: `{chk.distance:.4f}` | Score: `{chk.similarity_score * 100:.1f}%`"
                         )
                         st.code(chk.text, language="text")
 
@@ -184,9 +247,9 @@ def render_chat_interface(
             st.markdown(
                 f"""
                 <div class="latency-tag">
-                    <span>⚡ Retrieval: <b>{response.retrieval_latency_ms:.1f} ms</b></span>
-                    <span>🤖 Generation: <b>{response.llm_latency_ms:.1f} ms</b>{mock_label}</span>
-                    <span>⏱️ Total: <b>{response.total_latency_ms:.1f} ms</b></span>
+                    <span class="latency-item">⚡ Retrieval: <b>{response.retrieval_latency_ms:.1f} ms</b></span>
+                    <span class="latency-item">🤖 Generation: <b>{response.llm_latency_ms:.1f} ms</b>{mock_label}</span>
+                    <span class="latency-item">⏱️ Total: <b>{response.total_latency_ms:.1f} ms</b></span>
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -206,4 +269,3 @@ def render_chat_interface(
                 "is_mock": response.is_mock,
             }
         )
-
