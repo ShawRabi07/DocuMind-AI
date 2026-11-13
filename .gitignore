@@ -1,0 +1,67 @@
+# ============================================================
+# DocuMind AI – .gitignore
+# ============================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# ---------- Virtual environment ----------
+.venv/
+venv/
+env/
+ENV/
+
+# ---------- IDE / Editor ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ---------- OS ----------
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---------- Environment / Secrets ----------
+.env
+
+# ---------- Data (generated at runtime) ----------
+data/uploads/*
+data/chroma_db/*
+!data/uploads/.gitkeep
+!data/chroma_db/.gitkeep
+!data/sample_docs/*
+
+# ---------- Model caches ----------
+models/
+*.bin
+*.pt
+*.onnx
+*.safetensors
+
+# ---------- HuggingFace / Torch caches ----------
+.cache/
+
+# ---------- Logs ----------
+*.log
+
+# ---------- Pytest ----------
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ---------- Misc ----------
+*.bak
+*.tmp
+
