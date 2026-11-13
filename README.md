@@ -1,5 +1,11 @@
 # DocuMind AI – Multi-Document RAG Assistant
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://shawrabi07-documind-ai-app-rgrjey.streamlit.app/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11.9-blue.svg)](https://www.python.org/)
+
+> 🚀 **Live Web Application**: [https://shawrabi07-documind-ai-app-rgrjey.streamlit.app/](https://shawrabi07-documind-ai-app-rgrjey.streamlit.app/)
+
 DocuMind AI is a production-style Retrieval-Augmented Generation (RAG) assistant that allows users to upload, index, cross-examine, and converse with multiple PDF documents simultaneously. It combines **PyMuPDF**, **Sentence Transformers**, **ChromaDB**, and **Llama 3** (via local **Ollama**) inside a modern **Streamlit** dashboard.
 
 Every answer is strictly grounded in the verified text of the uploaded documents and comes with explicit, page-level source citations and empirical latency telemetry.
